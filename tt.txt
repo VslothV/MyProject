@@ -1,0 +1,31 @@
+nano ~/fix_desktop_files.sh
+
+#!/bin/bash
+# This script cleans broken .desktop files that wrongly contain PULSE_SERVER
+
+echo "🔧 Starting cleanup of .desktop files..."
+
+# Where to search
+DESKTOP_PATHS=(
+  "$HOME/.local/share/applications"
+  "/usr/share/applications"
+)
+
+for path in "${DESKTOP_PATHS[@]}"; do
+    echo "Searching in $path..."
+    find "$path" -type f -name "*.desktop" | while read -r file; do
+        if grep -q "PULSE_SERVER" "$file"; then
+            echo "🚀 Fixing: $file"
+            # Create a backup first
+            cp "$file" "$file.bak"
+
+            # Remove only PULSE_SERVER part from Exec line
+            sed -i 's|env PULSE_SERVER=[^ ]* ||' "$file"
+
+            # Optional: clean if extra spaces remain
+            sed -i 's/  */ /g' "$file"
+        fi
+    done
+done
+
+echo "✅ Cleanup finished! Backups created with .bak extension."
